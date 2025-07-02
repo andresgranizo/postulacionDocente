@@ -12,5 +12,6 @@ class Contact extends Model
         'correo',
         'codigo_dactilar',
         'fecha_expiracion',
+        'habilitado_cne',
     ];
 }

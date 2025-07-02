@@ -17,5 +17,7 @@ use App\Http\Controllers\RegistrationController;
 
 Route::get('/', [RegistrationController::class, 'create'])->name('registration.create');
 Route::post('/consultar-cedula', [RegistrationController::class, 'consultarCedula'])->name('registration.consultarCedula');
+Route::post('/consultar-cne', [RegistrationController::class, 'consultarCne'])
+    ->name('registration.consultarCne');
 Route::post('/guardar-registro', [RegistrationController::class, 'store'])
      ->name('registration.store');

@@ -350,6 +350,79 @@
         altFormat: "Y-m-d"
       });
     </script>
+    <script>
+        // Crea el mensaje CNE debajo del input si no existe
+        const cneMsg = $('<div>')
+            .attr('id', 'msj_cne')
+            .addClass('form-text text-danger mt-1');
+        $('#numero_identificacion').closest('.mb-3').append(cneMsg);
+
+        $('#numero_identificacion').on('input', function() {
+            let cedula = $(this).val().trim();
+            if (cedula.length === 10) {
+                $('#msj_cedula').css('color', 'black').text('🔍 Buscando Registro Civil...');
+                $('#msj_cne').css('color', 'black').text('🔍 Consultando habilitación CNE...');
+                $('#apellidos_nombres').val('').prop('readonly', false);
+
+                // Consulta Registro Civil
+                $.ajax({
+                    url: '{{ route('registration.consultarCedula') }}',
+                    method: 'POST',
+                    data: { cedula },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success(data) {
+                        if (data.error) {
+                            $('#msj_cedula').css('color', 'red').text('❌ ' + data.message);
+                        } else {
+                            $('#apellidos_nombres')
+                                .val(data.nombre)
+                                .prop('readonly', true)
+                                .addClass('filled-by-search');
+                            $('#msj_cedula').css('color', 'green').text('✅ Datos Registro Civil encontrados');
+                        }
+                    },
+                    error() {
+                        $('#msj_cedula').css('color', 'red').text('❌ Error al consultar Registro Civil');
+                    }
+                });
+
+                // Consulta CNE
+                $.ajax({
+                    url: '{{ route('registration.consultarCne') }}',
+                    method: 'POST',
+                    data: { cedula },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success(data) {
+                        if (data.error) {
+                            $('#msj_cne').css('color', 'red').text('❌ ' + data.message);
+                        } else {
+                            if (data.habilitado === 'SI') {
+                                $('#msj_cne').css('color', 'green').text('✅ Ciudadano habilitado para trámite público');
+                            } else {
+                                $('#msj_cne').css('color', 'red').text('❌ Ciudadano NO habilitado para trámite público');
+                            }
+                        }
+                    },
+                    error() {
+                        $('#msj_cne').css('color', 'red').text('❌ Error al consultar CNE');
+                    }
+                });
+
+            } else {
+                // Si la cédula se borra o no tiene 10 dígitos
+                $('#msj_cedula').text('');
+                $('#msj_cne').text('');
+                $('#apellidos_nombres').val('').prop('readonly', false);
+            }
+        });
+    </script>
+
+
+
 
 </body>
 
