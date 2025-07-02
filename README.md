@@ -125,3 +125,4 @@ chown -R www-data:www-data .
 ## 📝 Licencia
 
 Proyecto institucional de uso educativo y administrativo interno para la **Secretaría de Educación Superior, Ciencia, Tecnología e Innovación - SENESCYT**.
+# postulacionDocente
