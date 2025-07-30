@@ -3,7 +3,8 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\RegistrationController;
-
+use App\Http\Controllers\CatalogoController;
+use App\Http\Controllers\DocumentoController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -20,4 +21,14 @@ Route::post('/consultar-cedula', [RegistrationController::class, 'consultarCedul
 Route::post('/consultar-cne', [RegistrationController::class, 'consultarCne'])
     ->name('registration.consultarCne');
 Route::post('/guardar-registro', [RegistrationController::class, 'store'])
-     ->name('registration.store');
+    ->name('registration.store');
+
+//catalogs
+Route::get('/catalogo/provincias', [CatalogoController::class, 'provincias']);
+Route::get('/catalogo/cantones/{provincia_id}', [CatalogoController::class, 'cantones']);
+Route::get('/catalogo/zonas', [CatalogoController::class, 'zonas']);
+
+Route::get('/documentos/create', [DocumentoController::class, 'create'])->name('documentos.create');
+Route::post('/documentos', [DocumentoController::class, 'store'])->name('documentos.store');
+
+Route::post('/documentos/upload', [DocumentoController::class, 'upload'])->name('documentos.upload');

@@ -2,124 +2,144 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Contact;
-use RicorocksDigitalAgency\Soap\Facades\Soap;
-use Illuminate\Support\Facades\Log;
+use App\Models\Provincia;
+use App\Models\Documento;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use RicorocksDigitalAgency\Soap\Facades\Soap;
 
 class RegistrationController extends Controller
 {
     public function create()
     {
-        return view('create');
+        $contacts = Contact::orderBy('nombres_apellidos')->get();
+        return view('create', compact('contacts'));
     }
 
     public function store(Request $request)
     {
-
-        $request->validate([
+        $validated = $request->validate([
             'tipo_documento'    => 'required|string',
             'cedula'            => 'required',
             'nombres_apellidos' => 'required|string',
             'codigo_dactilar'   => 'required|string',
-            'correo' => [
+            'correo'            => [
                 'required',
                 'email',
                 'regex:/^[^\s,]+@[^\s,]+\.[^\s,]+$/'
             ],
-            'fecha_expiracion'  => 'required|date',
-        ], [
-            'correo.regex'    => 'El correo no debe contener espacios ni comas.',
-            'correo.email'    => 'El correo debe tener un formato válido.',
-            'correo.required' => 'El campo correo electrónico es obligatorio.',
-            'codigo_dactilar' => 'El campo codigo dactilar es obligatorio.',
-        ], [
-            'tipo_documento'    => 'tipo de documento',
-            'cedula'            => 'cédula',
-            'nombres_apellidos' => 'apellidos y nombres',
-            'codigo_dactilar'   => 'código dactilar',
-            'correo'            => 'correo electrónico',
-            'fecha_expiracion'  => 'fecha de expiración',
-            'fecha_nacimiento'  => 'fecha de nacimiento',
+            'telefono'          => 'required|string',
+            'provincia_id'      => 'required|integer',
+            'canton_id'         => 'required|integer',
+            'zona_id'           => 'required|integer',
+            'disponibilidad_movilizacion' => 'required|in:si,no',
+            'provincias_movilizacion'     => 'nullable|array',
+            'provincias_movilizacion.*'   => 'integer',
+            'zonas_movilizacion'          => 'nullable|string',
+            'exp_tecnico_superior' => 'required|in:SI,NO,NO_APLICA',
+            'exp_tecnologo_superior' => 'required|in:SI,NO,NO_APLICA',
+            'exp_tercer_nivel' => 'required|in:SI,NO,NO_APLICA',
+            'capacitacion_100h' => 'required|in:SI,NO',
+            'exp_gestion_educativa' => 'required|in:SI,NO,NO_APLICA',
+            'exp_docencia_investigacion' => 'required|in:SI,NO,NO_APLICA',
 
+        ], [
+            'correo.regex' => 'El correo no debe contener espacios ni comas.',
         ]);
 
+        // Validar Dinardap
         if ($request->tipo_documento === 'cedula') {
             $codigoDinardap = session('dinardap_codigo_dactilar');
-            $fechaDinardap  = session('dinardap_fecha_expiracion');
             $fechaNacimiento = session('dinardap_fecha_nacimiento');
-            print_r($fechaNacimiento);
+            $habilitadoCne = session('cne_habilitado');
 
-
-            if (!empty($fechaDinardap) && !empty($codigoDinardap)) {
-                $fechaDinardapFormateada = Carbon::createFromFormat('d/m/Y', $fechaDinardap)->startOfDay();
-                $fechaFormulario = Carbon::parse($request->fecha_expiracion)->startOfDay();
-
-                if (
-                    $codigoDinardap !== strtoupper($request->codigo_dactilar) ||
-                    !$fechaDinardapFormateada->equalTo($fechaFormulario)
-                ) {
-                    return redirect()->back()
-                        ->with('error', 'El código dactilar o la fecha de expiración no coinciden con los datos del Registro Civil.')
-                        ->withInput();
-                }
-            } else {
-                Log::info("🟡 No se realizó validación Dinardap para la cédula: " . $request->cedula);
+            if (!$codigoDinardap) {
+                Log::info("🟡 No se realizó validación Dinardap para la cédula: {$request->cedula}");
+            } elseif ($codigoDinardap !== strtoupper($request->codigo_dactilar)) {
+                return back()->withInput()->with('error', 'El código dactilar no coincide con los datos del Registro Civil.');
             }
 
             if ($fechaNacimiento) {
-                $fechaNacimientoCarbon = Carbon::createFromFormat('d/m/Y', $fechaNacimiento);
-                $edad = $fechaNacimientoCarbon->age;
-
+                $edad = Carbon::createFromFormat('d/m/Y', $fechaNacimiento)->age;
                 if ($edad < 18) {
-                    return redirect()->back()
-                        ->with('error', 'El ciudadano debe ser mayor de edad.')
-                        ->withInput();
+                    return back()->withInput()->with('error', 'El ciudadano debe ser mayor de edad.');
                 }
             } else {
-                Log::warning("⚠️ No se obtuvo la fecha de nacimiento de Dinardap para la cédula: " . $request->cedula);
+                Log::warning("⚠️ No se obtuvo la fecha de nacimiento de Dinardap para la cédula: {$request->cedula}");
             }
 
-            // Validación contra CNE
-            $cneResult = $this->consultarCneInterno($request->cedula);
-            if ($cneResult !== 'SI') {
-                return redirect()->back()
-                    ->with('error', '🚫 Para continuar con el proceso, el ciudadano debe estar habilitado para trámite público. Si considera que esta información es incorrecta, por favor verifique sus datos o contacte a las autoridades correspondientes.')
-                    ->withInput();
+            if (!$habilitadoCne) {
+                return back()->withInput()->with('error', 'Por favor realice la búsqueda de su cédula antes de guardar.');
+            }
+            if ($habilitadoCne !== 'SI') {
+                return back()->withInput()->with('error', '🚫 Para continuar, el ciudadano debe estar habilitado para trámite público.');
             }
         }
 
+        // Validar duplicados
         if (Contact::where('cedula', $request->cedula)->exists()) {
-            return redirect()->back()
-                ->with('error', 'Este número de identificación ya fue registrado anteriormente.')
-                ->withInput();
+            return back()->withInput()->with('error', 'Este número de identificación ya fue registrado anteriormente.');
         }
-
         if (Contact::where('correo', $request->correo)->exists()) {
-            return redirect()->back()
-                ->with('error', 'Este correo ya está registrado con otro número de identificación.')
-                ->withInput();
+            return back()->withInput()->with('error', 'Este correo ya está registrado con otro número de identificación.');
         }
 
-        $habilitadoCne = $this->consultarCneInterno($request->cedula);
-        if (!$habilitadoCne) {
-            $habilitadoCne = 'NO';
-        }
+        Log::info('🟢 Datos recibidos Request:', $request->all());
 
-        Contact::create([
-            'tipo_documento'    => $request->tipo_documento,
-            'cedula'            => $request->cedula,
+
+
+
+        $contact = Contact::create([
+            'tipo_documento' => $request->tipo_documento,
+            'cedula' => $request->cedula,
             'nombres_apellidos' => $request->nombres_apellidos,
-            'codigo_dactilar'   => $request->codigo_dactilar,
-            'correo'            => $request->correo,
-            'fecha_expiracion'  => $request->fecha_expiracion,
-            'habilitado_cne'    => $habilitadoCne,
+            'codigo_dactilar' => $request->codigo_dactilar,
+            'correo' => $request->correo,
+            'habilitado_cne' => session('cne_habilitado') ?? 'NO',
+            'telefono' => $request->telefono,
+            'provincia_id' => $request->provincia_id,
+            'canton_id' => $request->canton_id,
+            'zona_id' => $request->zona_id,
+            'disponibilidad_movilizacion' => $request->disponibilidad_movilizacion,
+            'provincias_movilizacion' => $request->provincias_movilizacion ? json_encode($request->provincias_movilizacion) : null,
+            'zonas_movilizacion' => $request->zonas_movilizacion,
+            'cuenta_con' => $request->cuenta_con ? json_encode($request->cuenta_con) : null,
+
+            // Aquí los nuevos campos mapeados directamente
+            'exp_tecnico_superior' => $request->exp_tecnico_superior,
+            'exp_tecnologo_superior' => $request->exp_tecnologo_superior,
+            'exp_tercer_nivel' => $request->exp_tercer_nivel,
+            'capacitacion_100h' => $request->capacitacion_100h,
+            'exp_gestion_educativa' => $request->exp_gestion_educativa,
+            'exp_docencia_investigacion' => $request->exp_docencia_investigacion,
+
         ]);
 
-        session()->forget(['dinardap_codigo_dactilar', 'dinardap_fecha_expiracion', 'dinardap_fecha_nacimiento']);
+        if ($request->hasFile('archivo')) {
+            $nombreOriginal = $request->file('archivo')->getClientOriginalName();
+            $rutaArchivo = $request->file('archivo')->storeAs('documentos_cv', $nombreOriginal, 'public');
 
-        return redirect()->back()->with('success', '✅ Datos guardados exitosamente.');
+
+            Documento::create([
+                'contact_id' => $contact->id,
+                'tipo' => 'cv',
+                'ruta' => $rutaArchivo,
+                'nombre_original' => $request->file('archivo')->getClientOriginalName(),
+                'created_at' => now(),
+            ]);
+        }
+
+        session()->forget([
+            'dinardap_codigo_dactilar',
+            'dinardap_fecha_nacimiento',
+            'cne_habilitado',
+        ]);
+
+        session(['cedula' => $request->cedula]);
+
+        return back()->with('success', '✅ Datos guardados exitosamente.');
     }
 
     public function consultarCedula(Request $request)
@@ -155,19 +175,17 @@ class RegistrationController extends Controller
 
             $nombre = collect($registros)->firstWhere('campo', 'nombre')->valor ?? null;
             $codigoDactilar = collect($registros)->firstWhere('campo', 'individualDactilar')->valor ?? null;
-            $fechaExpiracion = collect($registros)->firstWhere('campo', 'fechaExpiracion')->valor ?? null;
             $fechaNacimiento = collect($registros)->firstWhere('campo', 'fechaNacimiento')->valor ?? null;
 
             Log::info('🔍 Respuesta Dinardap:', [
                 'cedula'            => $cedula,
                 'nombre'            => $nombre,
                 'codigo_dactilar'   => $codigoDactilar,
-                'fecha_expiracion'  => $fechaExpiracion,
                 'fecha_nacimiento'  => $fechaNacimiento,
             ]);
+
             session([
                 'dinardap_codigo_dactilar'  => $codigoDactilar,
-                'dinardap_fecha_expiracion' => $fechaExpiracion,
                 'dinardap_fecha_nacimiento' => $fechaNacimiento,
             ]);
 
@@ -180,7 +198,8 @@ class RegistrationController extends Controller
 
             return response()->json([
                 'nombre' => $nombre,
-                'cedula' => $cedula
+                'cedula' => $cedula,
+                'fecha_nacimiento' => $fechaNacimiento,
             ], 200);
         } catch (\Throwable $e) {
             Log::error("❌ Dinardap getFichaGeneral error: " . $e->getMessage());
@@ -229,9 +248,8 @@ class RegistrationController extends Controller
                     ],
                 ]);
 
-            Log::info('🔍 Respuesta CNE cruda:', json_decode(json_encode($response), true));
+            //    Log::info('🔍 Respuesta CNE cruda:', json_decode(json_encode($response), true));
 
-            // 🚨 Recorrer automáticamente buscando 'paquete'
             $paquete = null;
 
             if (isset($response->response->stdClass->paquete)) {
@@ -277,9 +295,12 @@ class RegistrationController extends Controller
                 ], 200);
             }
 
+            session(['cne_habilitado' => $habilitado]);
+
             return response()->json([
                 'cedula'     => $cedula,
                 'habilitado' => $habilitado
+
             ], 200);
         } catch (\Throwable $e) {
             Log::error("❌ Error consultando CNE: " . $e->getMessage());
@@ -289,9 +310,6 @@ class RegistrationController extends Controller
             ], 200);
         }
     }
-
-
-
 
     private function consultarCneInterno($cedula)
     {
@@ -325,17 +343,18 @@ class RegistrationController extends Controller
                     ],
                 ]);
 
-            $entidades = collect($response->return->entidades->entidad ?? []);
+            // Igual que el otro método
+            $entidad = $response->return->entidades->entidad ?? null;
+            $fila = $entidad ? ($entidad->filas->fila ?? null) : null;
+            $columnas = $fila ? ($fila->columnas->columna ?? []) : [];
 
-            foreach ($entidades as $entidad) {
-                $filas = collect($entidad->filas->fila ?? []);
-                foreach ($filas as $fila) {
-                    $columnas = collect($fila->columnas->columna ?? []);
-                    foreach ($columnas as $columna) {
-                        if ($columna->campo === 'habilitadoTPublico') {
-                            return $columna->valor;
-                        }
-                    }
+            if (!is_array($columnas)) {
+                $columnas = [$columnas];
+            }
+
+            foreach ($columnas as $columna) {
+                if (isset($columna->campo) && stripos($columna->campo, 'habilitado') !== false) {
+                    return $columna->valor;
                 }
             }
 
@@ -344,5 +363,12 @@ class RegistrationController extends Controller
             Log::error("❌ Error consultando CNE interno: " . $e->getMessage());
             return null;
         }
+    }
+
+    public function getProvincias()
+    {
+        return \App\Models\Provincia::select('id', 'nombre', 'zona')
+            ->orderBy('nombre')
+            ->get();
     }
 }

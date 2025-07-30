@@ -13,7 +13,6 @@ return new class extends Migration {
             $table->string('cedula', 20);
             $table->string('correo');
             $table->string('codigo_dactilar', 30);
-            $table->date('fecha_expiracion');
             $table->timestamps();
         });
     }
