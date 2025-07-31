@@ -2,11 +2,47 @@
 <html lang="es">
 
 <head>
+    <style>
+        /* Estilo general del contenedor */
+        #toast-container>div {
+            background-color: rgba(0, 0, 0, 0.9) !important;
+            color: #fff !important;
+            font-weight: bold;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Opcional: iconos de éxito, error, etc. */
+        .toast-success {
+            background-color: #28a745 !important;
+        }
+
+        .toast-error {
+            background-color: #dc3545 !important;
+        }
+
+        .toast-info {
+            background-color: #17a2b8 !important;
+        }
+
+        .toast-warning {
+            background-color: #ffc107 !important;
+            color: #000 !important;
+        }
+    </style>
+
+
     <meta charset="UTF-8">
     <title>Postulación SENESCYT</title>
-      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
     @include('components.header')
 
 </head>
@@ -78,35 +114,46 @@
                 </div>
             </div>
             <div class="mb-3">
-    <label for="zona_id" class="form-label">Zona *</label>
-    <select id="zona_id" name="zona_id" class="form-select" required>
-        <option value="">Seleccione una zona</option>
-    </select>
-</div>
+                <label for="zona_id" class="form-label">Zona *</label>
+                <select id="zona_id" name="zona_id" class="form-select" required>
+                    <option value="">Seleccione una zona</option>
+                </select>
+            </div>
 
 
             {{-- Botón Final --}}
             <div class="text-center mt-4">
-                <button type="submit" class="btn btn-primary btn-lg w-100">Enviar</button>
+                <button type="submit" class="btn btn-primary btn-lg w-100" id="btn_guardar_formulario"
+                    disabled>Enviar</button>
             </div>
+
+
         </form>
-
-
-
-
     </div>
-
-
-
     {{-- Scripts --}}
-
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
- <script src="{{ asset('js/datos-personales.js') }}"></script>
+    <script src="{{ asset('js/datos-personales.js') }}"></script>
+    <script src="{{ asset('js/datos-personales-tipo.js') }}"></script>
 
     <script>
         window.registrationConsultarCedulaUrl = "{{ route('registration.consultarCedula') }}";
+    </script>
+
+    <script>
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "progressBar": true,
+            "positionClass": "toast-top-center",
+            "preventDuplicates": true,
+            "timeOut": "10000",
+            "extendedTimeOut": "2000",
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
     </script>
 
 

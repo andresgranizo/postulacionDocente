@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use RicorocksDigitalAgency\Soap\Facades\Soap;
+use Illuminate\Validation\Rule;
 
 class RegistrationController extends Controller
 {
@@ -22,9 +23,10 @@ class RegistrationController extends Controller
     {
         $validated = $request->validate([
             'tipo_documento'    => 'required|string',
-            'cedula'            => 'required',
-            'nombres_apellidos' => 'required|string',
-            'codigo_dactilar'   => 'required|string',
+            'cedula' => Rule::requiredIf($request->tipo_documento === 'cedula'),
+            'codigo_dactilar' => Rule::requiredIf($request->tipo_documento === 'cedula'),
+            'fecha_nacimiento' => Rule::requiredIf($request->tipo_documento === 'pasaporte'),
+            'pais_nacionalidad' => Rule::requiredIf($request->tipo_documento === 'pasaporte'),
             'correo'            => [
                 'required',
                 'email',
@@ -370,5 +372,101 @@ class RegistrationController extends Controller
         return \App\Models\Provincia::select('id', 'nombre', 'zona')
             ->orderBy('nombre')
             ->get();
+    }
+
+    public function validarCedula(Request $request)
+    {
+        $cedula = $request->cedula;
+
+        // 1. ¿Ya existe en la base de datos?
+        $existe = Contact::where('cedula', $cedula)->exists();
+        if ($existe) {
+            return response()->json([
+                'valida' => false,
+                'existe' => true,
+                'message' => 'Esta cédula ya tiene un registro previo. No se puede volver a registrar.',
+            ], 409);
+        }
+
+        // 2. Consultar a Dinardap
+        try {
+            $context = stream_context_create([
+                'ssl' => [
+                    'verify_peer'       => false,
+                    'verify_peer_name'  => false,
+                    'allow_self_signed' => true,
+                ],
+            ]);
+
+            $response = Soap::to(config('soap.dinardap_wsdl'))
+                ->withBasicAuth(
+                    config('soap.dinardap_user'),
+                    config('soap.dinardap_pass')
+                )
+                ->withOptions(['stream_context' => $context])
+                ->call('getFichaGeneral', [
+                    'numeroIdentificacion' => $cedula,
+                    'codigoPaquete'        => '471',
+                ]);
+
+            $body = $response->response;
+            $registros = $body->return->instituciones->datosPrincipales->registros ?? [];
+
+            $nombre = collect($registros)->firstWhere('campo', 'nombre')->valor ?? null;
+
+            if ($nombre) {
+                return response()->json([
+                    'valida' => true,
+                    'existe' => false,
+                    'message' => '✅ Cédula válida y encontrada en Registro Civil.',
+                ]);
+            } else {
+                return response()->json([
+                    'valida' => false,
+                    'existe' => false,
+                    'message' => '⚠️ Cédula no encontrada en el Registro Civil.',
+                ], 404);
+            }
+        } catch (\Throwable $e) {
+            Log::error("❌ Error consultando Dinardap: " . $e->getMessage());
+            return response()->json([
+                'valida' => false,
+                'existe' => false,
+                'message' => '⚠️ Error al consultar el Registro Civil, cédula no válida.',
+            ], 500);
+        }
+    }
+
+    public function validarPasaporte(Request $request)
+    {
+        $request->validate([
+            'pasaporte' => ['required', 'string', 'max:20'],
+        ]);
+
+        $pasaporte = $request->pasaporte;
+
+        if (preg_match('/^\d{10}$/', $pasaporte)) {
+            return response()->json([
+                'valido' => false,
+                'existe' => false,
+                'message' => '⚠️ Este número parece una cédula ecuatoriana. Por favor, verifique.',
+            ], 422);
+        }
+
+        $existe = Contact::where('cedula', $pasaporte)->exists();
+
+        if ($existe) {
+            return response()->json([
+                'valido' => false,
+                'existe' => true,
+                'message' => 'Este pasaporte ya tiene un registro previo.',
+            ], 409);
+        }
+
+        return response()->json([
+            'valido' => true,
+            'existe' => false,
+            'message' => '✅ Pasaporte válido. No se encontró en la base de datos.',
+        ]);
     }
 }

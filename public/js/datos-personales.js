@@ -25,98 +25,128 @@ $(document).ready(function () {
         dropdownParent: $('#contenedor_provincias')
     });
 
-    // Eventos del tipo de identificación
-    $('#tipo_documento').on('change', toggleBuscarSegunTipo);
+   $('#tipo_documento').on('change', function () {
+        toggleBuscarSegunTipo();
+        consultarVisaSiAplica(); // Por si ya hay datos ingresados
+    });
+
+    $('#numero_identificacion, #fecha_nacimiento, #pais_nacionalidad').on('input change', consultarVisaSiAplica);
 
     $('#numero_identificacion').on('input', function () {
-        const v = $(this).val().trim();
-        $('#btn_buscar_cedula').prop('disabled', v.length !== 10);
-    });
+        const tipo = $('#tipo_documento').val();
+        const valor = $(this).val().trim();
 
-    $('#btn_buscar_cedula').click(function () {
-        const cedula = $('#numero_identificacion').val().trim();
-        $('#msj_cedula').css('color', 'black').text('🔍 Buscando...');
-        $('#msj_cne').remove();
-        $('#apellidos_nombres').val('').prop('readonly', false);
+        if (tipo === 'cedula' && valor.length === 10) {
+            // Validaciones y consulta para cédula
+            $('#msj_cedula').text('🔍 Buscando...').css('color', 'black');
+            $('#apellidos_nombres').val('').prop('readonly', false);
+            $('#msj_cne').remove();
 
-        $.ajax({
-            url: window.registrationConsultarCedulaUrl,
-            method: 'POST',
-            data: { cedula },
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success(data) {
-                if (data.error) {
-                    $('#msj_cedula').css('color', 'red').text('❌ ' + data.message);
-                    return;
+            $.ajax({
+                url: 'api/validar-cedula',
+                method: 'POST',
+                data: { cedula: valor },
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                success: function (res) {
+                    if (res.existe) {
+                        toastr.warning("Esta cédula ya tiene un registro previo.", "⚠️ Atención");
+                        $('#btn_guardar_formulario').prop('disabled', true);
+                    } else {
+                        toastr.success(res.message || "Cédula válida", '✅ Éxito');
+                        $('#btn_guardar_formulario').prop('disabled', false);
+                    }
                 }
+            });
 
-                $('#apellidos_nombres').val(data.nombre).prop('readonly', true);
-                $('#msj_cedula').css('color', 'green').text('✅ Datos encontrados');
+            $.ajax({
+                url: window.registrationConsultarCedulaUrl,
+                method: 'POST',
+                data: { cedula: valor },
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                success(data) {
+                    if (data.error) {
+                        $('#msj_cedula').css('color', 'red').text('❌ ' + data.message);
+                        return;
+                    }
 
-                // Validar edad
-                let esMenorEdad = false;
-                if (data.fecha_nacimiento) {
+                    $('#apellidos_nombres').val(data.nombre).prop('readonly', true);
+                    $('#campo_apellidos_nombres').removeClass('d-none');
+                    $('#msj_cedula').css('color', 'green').text('✅ Datos encontrados');
+
+                    // Edad
                     const partes = data.fecha_nacimiento.split('/');
-                    const dia = parseInt(partes[0], 10);
-                    const mes = parseInt(partes[1], 10) - 1;
-                    const anio = parseInt(partes[2], 10);
-                    const fechaNacimiento = new Date(anio, mes, dia);
+                    const fechaNacimiento = new Date(partes[2], partes[1] - 1, partes[0]);
                     const hoy = new Date();
                     let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
-                    const m = hoy.getMonth() - fechaNacimiento.getMonth();
-                    if (m < 0 || (m === 0 && hoy.getDate() < fechaNacimiento.getDate())) {
+                    if (hoy.getMonth() < fechaNacimiento.getMonth() ||
+                        (hoy.getMonth() === fechaNacimiento.getMonth() && hoy.getDate() < fechaNacimiento.getDate())) {
                         edad--;
                     }
+
                     if (edad < 18) {
-                        esMenorEdad = true;
+                        $('#msj_cedula').removeClass('text-success').addClass('text-danger')
+                            .html('❌ La persona es menor de edad.');
+                        $('input, select, button').prop('disabled', true);
+                        return;
                     }
-                }
 
-                if (esMenorEdad) {
-                    $('#msj_cedula')
-                        .removeClass('text-success')
-                        .addClass('text-danger')
-                        .html('❌ La persona es menor de edad y no puede continuar con la postulación.');
-                    $('input, select, button').prop('disabled', true);
-                    return;
-                }
+                    $.ajax({
+                        url: window.registrationConsultarCneUrl,
+                        method: 'POST',
+                        data: { cedula: valor },
+                        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                        success(cneData) {
+                            const clase = cneData.habilitado?.toUpperCase() === 'SI' ? 'text-success' : 'text-danger';
+                            const mensaje = clase === 'text-success'
+                                ? '✅ Sin impedimento para ejercer cargo público'
+                                : '❌ La persona tiene impedimento para ejercer cargo público';
 
-                // Si no es menor de edad, consultar CNE
-                $.ajax({
-                    url: window.registrationConsultarCneUrl,
-                    method: 'POST',
-                    data: { cedula },
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success(cneData) {
-                        let mensajeCNE = '';
-                        let claseCNE = '';
-                        if (cneData.habilitado && cneData.habilitado.toUpperCase() === 'SI') {
-                            mensajeCNE = '✅ Sin impedimento para ejercer cargo público';
-                            claseCNE = 'text-success';
-                        } else {
-                            mensajeCNE = '❌ La persona tiene impedimento para ejercer cargo público';
-                            claseCNE = 'text-danger';
-                            $('input, select, button').prop('disabled', true);
+                            if (clase === 'text-danger') {
+                                $('input, select, button').prop('disabled', true);
+                            }
+
+                            $('#msj_cne').remove();
+                            $('<div id="msj_cne" class="form-text ' + clase + '">' + mensaje + '</div>')
+                                .insertAfter('#msj_cedula');
+                        },
+                        error() {
+                            $('<div id="msj_cne" class="form-text text-danger">❌ Error al consultar CNE</div>')
+                                .insertAfter('#msj_cedula');
                         }
-                        $('#msj_cne').remove();
-                        $('<div id="msj_cne" class="form-text ' + claseCNE + '">' + mensajeCNE + '</div>')
-                            .insertAfter('#msj_cedula');
-                    },
-                    error() {
-                        $('<div id="msj_cne" class="form-text text-danger">❌ Error al consultar CNE</div>')
-                            .insertAfter('#msj_cedula');
+                    });
+                },
+                error() {
+                    $('#msj_cedula').css('color', 'red').text('❌ Error en la consulta');
+                }
+            });
+        }
+
+        if (tipo === 'pasaporte' && valor.length > 3) {
+            $.ajax({
+                url: 'api/validar-pasaporte',
+                method: 'POST',
+                data: { pasaporte: valor },
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                success: function (res) {
+                    if (res.existe) {
+                        toastr.warning(res.message, '⚠️ Atención');
+                        $('#btn_guardar_formulario').prop('disabled', true);
+                    } else {
+                        toastr.success(res.message, '✅ Válido');
+                        $('#btn_guardar_formulario').prop('disabled', false);
                     }
-                });
-            },
-            error() {
-                $('#msj_cedula').css('color', 'red').text('❌ Error en la consulta');
-            }
-        });
+                },
+                error: function (xhr) {
+                    const msg = xhr.responseJSON?.message || "Error al validar pasaporte.";
+                    toastr.error(msg, "Error");
+                    $('#btn_guardar_formulario').prop('disabled', true);
+                }
+            });
+        }
     });
+});
+
+
 
     // Cargar provincias de residencia
     $.get('/catalogo/provincias', function (data) {
@@ -159,7 +189,8 @@ $(document).ready(function () {
             });
         }
     });
-    // Cargar zonas (catálogo de zonas si lo usas)
+
+
     $.get('/catalogo/zonas', function (data) {
         data.forEach(function (zona) {
             $('#zona_id').append(
@@ -203,4 +234,13 @@ $(document).ready(function () {
         const zonasTexto = Array.from(zonas).sort().join(',');
         $('#zonas_movilizacion').val(zonasTexto !== '' ? zonasTexto : '0');
     });
-});
+
+
+
+toastr.options = {
+    "closeButton": true,
+    "progressBar": true,
+    "positionClass": "toast-top-right", // Cambia si se traslapa con algo
+    "timeOut": "10000"
+
+};
