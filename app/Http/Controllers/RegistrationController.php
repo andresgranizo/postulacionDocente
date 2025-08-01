@@ -469,4 +469,28 @@ class RegistrationController extends Controller
             'message' => '✅ Pasaporte válido. No se encontró en la base de datos.',
         ]);
     }
+
+    public function validarCorreo(Request $request)
+    {
+        $request->validate([
+            'correo' => 'required|email|regex:/^[^\s,]+@[^\s,]+\.[^\s,]+$/'
+        ]);
+
+        $correo = $request->correo;
+
+        $existe = Contact::where('correo', $correo)->exists();
+
+        if ($existe) {
+            return response()->json([
+                'valido' => false,
+                'existe' => true,
+                'message' => 'Este correo ya está registrado con otro número de identificación.',
+            ], 409);
+        }
+        return response()->json([
+            'valido' => true,
+            'existe' => false,
+            'message' => '✅ Correo válido. No se encontró en la base de datos.',
+        ]);
+    }
 }

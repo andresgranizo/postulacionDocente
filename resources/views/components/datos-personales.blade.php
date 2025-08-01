@@ -1,6 +1,8 @@
 <hr class="my-4">
 <h5 class="mt-4">Datos Personales</h5>
 
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
 {{-- Tipo de identificación --}}
 <div class="mb-3">
     <label for="tipo_documento" class="form-label">Tipo de Identificación *</label>
@@ -14,7 +16,7 @@
     Por favor, complete los campos de <strong>pasaporte</strong>, <strong>fecha de nacimiento</strong> y <strong>país de nacionalidad</strong> para obtener sus nombres completos automáticamente.
 </div>
 
-{{-- Campo dinámico: Cédula, Pasaporte o Refugiado --}}
+
 <div class="mb-3" id="campo_identificacion">
     <label for="numero_identificacion" class="form-label" id="label_numero_identificacion">Número de Identificación *</label>
     <div class="input-group">
@@ -68,13 +70,20 @@
 
 {{-- Correo --}}
 <div class="mb-3">
-    <label for="correo_electronico_principal" class="form-label">Correo Electrónico *</label>
-    <input type="email" id="correo_electronico_principal" name="correo" class="form-control"
-        value="{{ old('correo') }}" pattern="^[^\s,]+@[^\s,]+\.[^\s,]+$"
-        title="El correo no debe contener espacios ni comas."
-        oninvalid="this.setCustomValidity('El correo no debe contener espacios ni comas.')"
-        oninput="this.setCustomValidity('')">
+    <label for="correo" class="form-label">Correo Electrónico *</label>
+    <input type="email"
+           id="correo"
+           name="correo"
+           class="form-control"
+           value="{{ old('correo') }}"
+           required
+           pattern="^[^\s,]+@[^\s,]+\.[^\s,]+$"
+           title="El correo no debe contener espacios ni comas y debe tener un formato válido."
+           oninvalid="this.setCustomValidity('Ingresa un correo válido sin espacios ni comas.')"
+           oninput="this.setCustomValidity('')">
+    <small id="mensaje-correo" class="form-text text-danger d-none"></small>
 </div>
+
 
 {{-- Teléfono --}}
 <div class="mb-3">

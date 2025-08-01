@@ -26,3 +26,5 @@ Route::get('/paises', [CancilleriaController::class, 'listarPaises']);
 Route::post('/validar-cedula', [RegistrationController::class, 'validarCedula'])->name('registro.validarCedula');
 
 Route::post('/validar-pasaporte', [RegistrationController::class, 'validarPasaporte'])->name('registro.validarPasaporte');
+
+Route::post('validar-correo', [RegistrationController::class, 'validarCorreo'])->name('registro.validarCorreo');

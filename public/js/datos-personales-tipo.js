@@ -25,12 +25,6 @@ function actualizarCamposPorTipo() {
         $('#campo_fecha_nacimiento').removeClass('d-none');
         $('#campo_pais_nacionalidad').removeClass('d-none');
         $('#mensaje_llenado_previo').removeClass('d-none');
-    } else if (tipo === 'refugiado') {
-        $label.text('Número de Carné de Refugiado *');
-        $input.attr('name', 'numero_refugiado');
-        $('#campo_fecha_nacimiento').removeClass('d-none');
-        $('#campo_pais_nacionalidad').removeClass('d-none');
-        $('#mensaje_llenado_previo').removeClass('d-none');
     }
 
     consultarVisaSiAplica();

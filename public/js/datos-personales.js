@@ -25,7 +25,7 @@ $(document).ready(function () {
         dropdownParent: $('#contenedor_provincias')
     });
 
-   $('#tipo_documento').on('change', function () {
+    $('#tipo_documento').on('change', function () {
         toggleBuscarSegunTipo();
         consultarVisaSiAplica(); // Por si ya hay datos ingresados
     });
@@ -48,15 +48,20 @@ $(document).ready(function () {
                 data: { cedula: valor },
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                 success: function (res) {
-                    if (res.existe) {
-                        toastr.warning("Esta cédula ya tiene un registro previo.", "⚠️ Atención");
+                    toastr.success(res.message || "Cédula válida", '✅ Éxito');
+                    $('#btn_guardar_formulario').prop('disabled', false);
+                },
+                error: function (xhr) {
+                    if (xhr.status === 409 && xhr.responseJSON) {
+                        toastr.warning(xhr.responseJSON.message, "⚠️ Atención");
                         $('#btn_guardar_formulario').prop('disabled', true);
                     } else {
-                        toastr.success(res.message || "Cédula válida", '✅ Éxito');
+                        toastr.error("Error al validar la cédula.", "❌ Error");
                         $('#btn_guardar_formulario').prop('disabled', false);
                     }
                 }
             });
+
 
             $.ajax({
                 url: window.registrationConsultarCedulaUrl,
@@ -147,95 +152,89 @@ $(document).ready(function () {
 });
 
 
+$.get('/catalogo/provincias', function (data) {
+    provinciasData = data;
 
-    // Cargar provincias de residencia
-    $.get('/catalogo/provincias', function (data) {
-        provinciasData = data;
+    data.forEach(function (provincia) {
+        // Para residencia
+        $('#provincia_id').append(
+            $('<option>', {
+                value: provincia.id,
+                text: provincia.nombre
+            })
+        );
 
-        data.forEach(function (provincia) {
-            // Para residencia
-            $('#provincia_id').append(
-                $('<option>', {
-                    value: provincia.id,
-                    text: provincia.nombre
-                })
-            );
-
-            // Para multiselect movilización
-            $('#provincias_movilizacion').append(
-                $('<option>', {
-                    value: provincia.id,
-                    text: provincia.nombre,
-                    'data-zona': provincia.zona
-                })
-            );
-        });
+        $('#provincias_movilizacion').append(
+            $('<option>', {
+                value: provincia.id,
+                text: provincia.nombre,
+                'data-zona': provincia.zona
+            })
+        );
     });
+});
 
-    // Cargar cantones según provincia
-    $('#provincia_id').on('change', function () {
-        const provinciaId = $(this).val();
-        $('#canton_id').empty().append('<option value="">Seleccione un cantón</option>');
-        if (provinciaId) {
-            $.get('/catalogo/cantones/' + provinciaId, function (data) {
-                data.forEach(function (canton) {
-                    $('#canton_id').append(
-                        $('<option>', {
-                            value: canton.id,
-                            text: canton.nombre
-                        })
-                    );
-                });
+$('#provincia_id').on('change', function () {
+    const provinciaId = $(this).val();
+    $('#canton_id').empty().append('<option value="">Seleccione un cantón</option>');
+    if (provinciaId) {
+        $.get('/catalogo/cantones/' + provinciaId, function (data) {
+            data.forEach(function (canton) {
+                $('#canton_id').append(
+                    $('<option>', {
+                        value: canton.id,
+                        text: canton.nombre
+                    })
+                );
             });
-        }
-    });
-
-
-    $.get('/catalogo/zonas', function (data) {
-        data.forEach(function (zona) {
-            $('#zona_id').append(
-                $('<option>', {
-                    value: zona.id,
-                    text: zona.nombre
-                })
-            );
         });
+    }
+});
+
+
+$.get('/catalogo/zonas', function (data) {
+    data.forEach(function (zona) {
+        $('#zona_id').append(
+            $('<option>', {
+                value: zona.id,
+                text: zona.nombre
+            })
+        );
     });
+});
 
 
-    $('#disponibilidad_movilizacion').on('change', function () {
-        const valor = $(this).val();
-        if (valor === 'si') {
-            $('#contenedor_provincias').show();
-            $('#zonas_movilizacion').val('');
+$('#disponibilidad_movilizacion').on('change', function () {
+    const valor = $(this).val();
+    if (valor === 'si') {
+        $('#contenedor_provincias').show();
+        $('#zonas_movilizacion').val('');
+    } else {
+        $('#contenedor_provincias').hide();
+        $('#provincias_movilizacion').val([]).trigger('change');
+
+        const provinciaResidenciaId = $('#provincia_id').val();
+        const provinciaSeleccionada = provinciasData.find(p => p.id == provinciaResidenciaId);
+
+        if (provinciaSeleccionada) {
+            $('#zonas_movilizacion').val(provinciaSeleccionada.zona || '0');
         } else {
-            $('#contenedor_provincias').hide();
-            $('#provincias_movilizacion').val([]).trigger('change');
-
-            const provinciaResidenciaId = $('#provincia_id').val();
-            const provinciaSeleccionada = provinciasData.find(p => p.id == provinciaResidenciaId);
-
-            if (provinciaSeleccionada) {
-                $('#zonas_movilizacion').val(provinciaSeleccionada.zona || '0');
-            } else {
-                $('#zonas_movilizacion').val('0');
-            }
+            $('#zonas_movilizacion').val('0');
         }
+    }
+});
+
+
+$('#provincias_movilizacion').on('change', function () {
+    const zonas = new Set();
+    $('#provincias_movilizacion option:selected').each(function () {
+        const zona = $(this).data('zona');
+        if (zona) zonas.add(zona);
     });
 
-
-    $('#provincias_movilizacion').on('change', function () {
-        const zonas = new Set();
-        $('#provincias_movilizacion option:selected').each(function () {
-            const zona = $(this).data('zona');
-            if (zona) zonas.add(zona);
-        });
-
-        const zonasTexto = Array.from(zonas).sort().join(',');
-        $('#zonas_movilizacion').val(zonasTexto !== '' ? zonasTexto : '0');
-    });
-
-
+    const zonasTexto = Array.from(zonas).sort().join(',');
+    $('#zonas_movilizacion').val(zonasTexto !== '' ? zonasTexto : '0');
+});
 
 toastr.options = {
     "closeButton": true,
@@ -244,3 +243,45 @@ toastr.options = {
     "timeOut": "10000"
 
 };
+
+$('#correo').on('blur', function () {
+    const correo = $(this).val();
+
+    if (correo.length > 0) {
+        $.ajax({
+            url: '/api/validar-correo',
+            method: 'POST',
+            data: {
+                correo: correo,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function (response) {
+                if (response.valido) {
+                    $('#mensaje-correo')
+                        .removeClass('text-danger')
+                        .addClass('text-success')
+                        .removeClass('d-none')
+                        .text(response.message);
+                }
+            },
+            error: function (xhr) {
+                if (xhr.status === 409) {
+                    const respuesta = xhr.responseJSON;
+                    $('#mensaje-correo')
+                        .removeClass('text-success')
+                        .addClass('text-danger')
+                        .removeClass('d-none')
+                        .text(respuesta.message);
+                } else {
+                    $('#mensaje-correo')
+                        .removeClass('text-success')
+                        .addClass('text-danger')
+                        .removeClass('d-none')
+                        .text('Error al validar el correo, recuerde que no debe contener caracteres especiales como ñ, acentos o espacios.');
+                }
+            }
+        });
+    } else {
+        $('#mensaje-correo').addClass('d-none').text('');
+    }
+});
