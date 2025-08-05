@@ -76,7 +76,35 @@ $(document).ready(function () {
 
                     $('#apellidos_nombres').val(data.nombre).prop('readonly', true);
                     $('#campo_apellidos_nombres').removeClass('d-none');
+
+                    $.ajax({
+                        url: '/api/titulos/consultar',
+                        method: 'POST',
+                        data: { cedula: valor },
+                        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                        success(response) {
+                            console.log('RESPUESTA TITULOS:', response);
+
+                            if (Array.isArray(response.titulos)) {
+                                const titulosReducidos = response.titulos.map(t => ({
+                                    titulo: t.titulo,
+                                    institucion: t.institucion
+                                }));
+                                mostrarTitulos(response.titulos);
+                            } else {
+                                $('#input-titulos').val('');
+                                mostrarTitulos([]);
+                            }
+                        },
+
+                        error() {
+                            toastr.error("❌ Error al consultar los títulos", "Error");
+                            mostrarTitulos([]);
+                        }
+                    });
+
                     $('#msj_cedula').css('color', 'green').text('✅ Datos encontrados');
+
 
                     // Edad
                     const partes = data.fecha_nacimiento.split('/');
@@ -156,7 +184,6 @@ $.get('/catalogo/provincias', function (data) {
     provinciasData = data;
 
     data.forEach(function (provincia) {
-        // Para residencia
         $('#provincia_id').append(
             $('<option>', {
                 value: provincia.id,
@@ -239,7 +266,7 @@ $('#provincias_movilizacion').on('change', function () {
 toastr.options = {
     "closeButton": true,
     "progressBar": true,
-    "positionClass": "toast-top-right", // Cambia si se traslapa con algo
+    "positionClass": "toast-top-right",
     "timeOut": "10000"
 
 };
@@ -285,3 +312,42 @@ $('#correo').on('blur', function () {
         $('#mensaje-correo').addClass('d-none').text('');
     }
 });
+
+function mostrarTitulos(titulos) {
+    const contenedor = document.getElementById('contenedor_titulos');
+    const hiddenContainer = document.getElementById('titulos-hidden');
+
+    contenedor.innerHTML = '';
+    hiddenContainer.innerHTML = '';
+
+    if (titulos.length > 0) {
+        document.getElementById('seccion_titulos').classList.remove('d-none');
+
+        titulos.forEach((titulo, index) => {
+            const div = document.createElement('div');
+            div.className = 'alert alert-secondary';
+
+            div.innerHTML = `
+                <strong>Título:</strong> ${titulo.titulo} <br>
+                <strong>Institución:</strong> ${titulo.institucion} <br>
+            `;
+
+            contenedor.appendChild(div);
+
+            const inputTitulo = document.createElement('input');
+            inputTitulo.type = 'hidden';
+            inputTitulo.name = `titulos[${index}][titulo]`;
+            inputTitulo.value = titulo.titulo;
+
+            const inputInstitucion = document.createElement('input');
+            inputInstitucion.type = 'hidden';
+            inputInstitucion.name = `titulos[${index}][institucion]`;
+            inputInstitucion.value = titulo.institucion;
+
+            hiddenContainer.appendChild(inputTitulo);
+            hiddenContainer.appendChild(inputInstitucion);
+        });
+    } else {
+        document.getElementById('seccion_titulos').classList.add('d-none');
+    }
+}

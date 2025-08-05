@@ -35,7 +35,7 @@ class RegistrationController extends Controller
             'telefono'          => 'required|string',
             'provincia_id'      => 'required|integer',
             'canton_id'         => 'required|integer',
-            'zona_id'           => 'required|integer',
+            'zona_id'           => 'nullable|integer',
             'disponibilidad_movilizacion' => 'required|in:si,no',
             'provincias_movilizacion'     => 'nullable|array',
             'provincias_movilizacion.*'   => 'integer',
@@ -118,6 +118,18 @@ class RegistrationController extends Controller
             'exp_docencia_investigacion' => $request->exp_docencia_investigacion,
 
         ]);
+
+        if ($request->has('titulos') && is_array($request->titulos)) {
+    foreach ($request->titulos as $tituloData) {
+        if (isset($tituloData['titulo'], $tituloData['institucion'])) {
+            $contact->titulos()->create([
+                'titulo' => $tituloData['titulo'],
+                'institucion' => $tituloData['institucion'],
+            ]);
+        }
+    }
+}
+
 
         if ($request->hasFile('archivo')) {
             $nombreOriginal = $request->file('archivo')->getClientOriginalName();

@@ -113,19 +113,18 @@
                     </div>
                 </div>
             </div>
-            <div class="mb-3">
-                <label for="zona_id" class="form-label">Zona *</label>
-                <select id="zona_id" name="zona_id" class="form-select" required>
-                    <option value="">Seleccione una zona</option>
-                </select>
-            </div>
 
+
+
+  <div id="titulos-hidden"></div>
 
             {{-- Botón Final --}}
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-primary btn-lg w-100" id="btn_guardar_formulario"
                     disabled>Enviar</button>
             </div>
+
+
 
 
         </form>

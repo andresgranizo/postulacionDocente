@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CancilleriaController;
 use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\TituloController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -28,3 +29,5 @@ Route::post('/validar-cedula', [RegistrationController::class, 'validarCedula'])
 Route::post('/validar-pasaporte', [RegistrationController::class, 'validarPasaporte'])->name('registro.validarPasaporte');
 
 Route::post('validar-correo', [RegistrationController::class, 'validarCorreo'])->name('registro.validarCorreo');
+
+Route::post('/titulos/consultar', [\App\Http\Controllers\TituloController::class, 'consultar']);

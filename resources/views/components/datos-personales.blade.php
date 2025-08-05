@@ -13,25 +13,24 @@
 </div>
 
 <div class="alert alert-info d-none" id="mensaje_llenado_previo">
-    Por favor, complete los campos de <strong>pasaporte</strong>, <strong>fecha de nacimiento</strong> y <strong>país de nacionalidad</strong> para obtener sus nombres completos automáticamente.
+    Por favor, complete los campos de <strong>pasaporte</strong>, <strong>fecha de nacimiento</strong> y <strong>país de
+        nacionalidad</strong> para obtener sus nombres completos automáticamente.
 </div>
 
-
 <div class="mb-3" id="campo_identificacion">
-    <label for="numero_identificacion" class="form-label" id="label_numero_identificacion">Número de Identificación *</label>
+    <label for="numero_identificacion" class="form-label" id="label_numero_identificacion">Número de Identificación
+        *</label>
     <div class="input-group">
         <input type="text" id="numero_identificacion" name="cedula" class="form-control"
             placeholder="Ingrese su número de identificación" value="{{ old('cedula') }}" maxlength="10">
-      {{-- Botón oculto ya no se usa --}}
-<button type="button" id="btn_buscar_cedula" class="btn btn-secondary d-none" disabled>
-    Buscar
-</button>
+        {{-- Botón oculto ya no se usa --}}
+        <button type="button" id="btn_buscar_cedula" class="btn btn-secondary d-none" disabled>
+            Buscar
+        </button>
 
     </div>
     <div id="msj_cedula" class="form-text"></div>
 </div>
-
-
 
 {{-- Apellidos y Nombres --}}
 <div class="mb-3 d-none" id="campo_apellidos_nombres">
@@ -40,7 +39,13 @@
         value="{{ old('nombres_apellidos') }}" readonly>
 </div>
 
-
+{{-- Títulos Académicos (solo si el tipo de documento es cédula) --}}
+<div id="seccion_titulos" class="d-none">
+    <h5 class="mt-4">Títulos Académicos</h5>
+    <div id="contenedor_titulos">
+        {{-- Se llena con JS --}}
+    </div>
+</div>
 
 {{-- Código Dactilar --}}
 <div class="mb-3" id="campo_codigo_dactilar">
@@ -55,6 +60,7 @@
     <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" class="form-control">
 </div>
 
+
 {{-- País de nacionalidad --}}
 <div class="mb-3 d-none" id="campo_pais_nacionalidad">
     <label for="pais_nacionalidad" class="form-label">País de Nacionalidad *</label>
@@ -65,22 +71,17 @@
 </div>
 
 <p><strong>
-    Recuerda verificar que tu correo sea válido ya que el sistema solo permite el registro una sola vez.
-</strong></p>
+        Recuerda verificar que tu correo sea válido ya que el sistema solo permite el registro una sola vez.
+    </strong></p>
 
 {{-- Correo --}}
 <div class="mb-3">
     <label for="correo" class="form-label">Correo Electrónico *</label>
-    <input type="email"
-           id="correo"
-           name="correo"
-           class="form-control"
-           value="{{ old('correo') }}"
-           required
-           pattern="^[^\s,]+@[^\s,]+\.[^\s,]+$"
-           title="El correo no debe contener espacios ni comas y debe tener un formato válido."
-           oninvalid="this.setCustomValidity('Ingresa un correo válido sin espacios ni comas.')"
-           oninput="this.setCustomValidity('')">
+    <input type="email" id="correo" name="correo" class="form-control" value="{{ old('correo') }}" required
+        pattern="^[^\s,]+@[^\s,]+\.[^\s,]+$"
+        title="El correo no debe contener espacios ni comas y debe tener un formato válido."
+        oninvalid="this.setCustomValidity('Ingresa un correo válido sin espacios ni comas.')"
+        oninput="this.setCustomValidity('')">
     <small id="mensaje-correo" class="form-text text-danger d-none"></small>
 </div>
 
@@ -112,6 +113,7 @@
     </select>
 </div>
 
+
 {{-- Movilización --}}
 <div class="mb-3">
     <label for="disponibilidad_movilizacion" class="form-label">¿Tiene disponibilidad de movilización? *</label>
@@ -126,7 +128,8 @@
 <div class="mb-3" id="contenedor_provincias" style="display: none;">
     <label for="provincias_movilizacion" class="form-label">Seleccione las provincias *</label>
     <select id="provincias_movilizacion" name="provincias_movilizacion[]" class="form-select select2" multiple>
-    </select>
+</select>
+
 </div>
 
 <input type="hidden" id="zonas_movilizacion" name="zonas_movilizacion">

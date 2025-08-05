@@ -29,4 +29,24 @@ class Contact extends Model
         'exp_gestion_educativa',
         'exp_docencia_investigacion', // si guardas el nombre del archivo
     ];
+
+    public function titulos()
+    {
+        return $this->hasMany(Titulo::class);
+    }
+
+    public function provincia()
+    {
+        return $this->belongsTo(Provincia::class);
+    }
+
+    public function canton()
+    {
+        return $this->belongsTo(Canton::class);
+    }
+
+    public function zona()
+    {
+        return $this->belongsTo(Zona::class);
+    }
 }
