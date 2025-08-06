@@ -106,7 +106,7 @@ class RegistrationController extends Controller
             'zona_id' => $request->zona_id,
             'disponibilidad_movilizacion' => $request->disponibilidad_movilizacion,
             'provincias_movilizacion' => $request->provincias_movilizacion ? json_encode($request->provincias_movilizacion) : null,
-            'zonas_movilizacion' => $request->zonas_movilizacion,
+            'zonas_movilizacion' => json_encode(explode(',', $request->zonas_movilizacion)),
             'cuenta_con' => $request->cuenta_con ? json_encode($request->cuenta_con) : null,
 
             // Aquí los nuevos campos mapeados directamente
@@ -119,16 +119,18 @@ class RegistrationController extends Controller
 
         ]);
 
+        // Log::info('Zonas movilización recibidas:', [$request->zonas_movilizacion]);
+
         if ($request->has('titulos') && is_array($request->titulos)) {
-    foreach ($request->titulos as $tituloData) {
-        if (isset($tituloData['titulo'], $tituloData['institucion'])) {
-            $contact->titulos()->create([
-                'titulo' => $tituloData['titulo'],
-                'institucion' => $tituloData['institucion'],
-            ]);
+            foreach ($request->titulos as $tituloData) {
+                if (isset($tituloData['titulo'], $tituloData['institucion'])) {
+                    $contact->titulos()->create([
+                        'titulo' => $tituloData['titulo'],
+                        'institucion' => $tituloData['institucion'],
+                    ]);
+                }
+            }
         }
-    }
-}
 
 
         if ($request->hasFile('archivo')) {

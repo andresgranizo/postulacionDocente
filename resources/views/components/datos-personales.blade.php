@@ -116,7 +116,7 @@
 
 {{-- Movilización --}}
 <div class="mb-3">
-    <label for="disponibilidad_movilizacion" class="form-label">¿Tiene disponibilidad de movilización? *</label>
+    <label for="disponibilidad_movilizacion" class="form-label">¿Tiene disponibilidad de trabajar fuera de su lugar de residencia? *</label>
     <select id="disponibilidad_movilizacion" name="disponibilidad_movilizacion" class="form-select" required>
         <option value="">Seleccione una opción</option>
         <option value="si">Sí</option>
@@ -126,8 +126,9 @@
 
 {{-- Provincias a movilizarse --}}
 <div class="mb-3" id="contenedor_provincias" style="display: none;">
-    <label for="provincias_movilizacion" class="form-label">Seleccione las provincias *</label>
+    <label for="provincias_movilizacion" class="form-label">Indique en cuál o cuáles provincias fuera de su lugar de residencia estaría dispuesto a trabajar *</label>
     <select id="provincias_movilizacion" name="provincias_movilizacion[]" class="form-select select2" multiple>
+    <option value="all">TODAS LAS PROVINCIAS</option>
 </select>
 
 </div>

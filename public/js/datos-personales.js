@@ -253,6 +253,21 @@ $('#disponibilidad_movilizacion').on('change', function () {
 
 
 $('#provincias_movilizacion').on('change', function () {
+
+    const selected = $(this).val();
+
+    if (selected.includes('all')) {
+        $('#provincias_movilizacion option').each(function () {
+            if ($(this).val() !== 'all') {
+                $(this).prop('selected', true);
+            } else {
+                $(this).prop('selected', false);
+            }
+        });
+
+        $('#provincias_movilizacion').trigger('change.select2');
+    }
+
     const zonas = new Set();
     $('#provincias_movilizacion option:selected').each(function () {
         const zona = $(this).data('zona');

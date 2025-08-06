@@ -100,6 +100,7 @@
                     <h5><i class="bi bi-file-earmark-arrow-up-fill me-2"></i> Carga de Documentos</h5>
                     <small class="text-muted">Sube un único archivo PDF que contenga tu hoja de vida y los
                         respaldos.</small>
+                         <strong>(Nombre del archivo: APELLIDOS_NOMBRES.pdf)</strong><br>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
@@ -117,6 +118,89 @@
 
 
   <div id="titulos-hidden"></div>
+
+
+{{-- Aceptación de términos --}}
+<div class="mb-4">
+    <label class="form-label fw-bold">
+        Aceptación del Acuerdo de Uso de Datos Personales *
+    </label>
+    <p>
+        Antes de continuar, por favor revisa el siguiente acuerdo legal.
+    </p>
+
+    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAcuerdo">
+        Leer acuerdo de uso de datos
+    </button>
+
+    <div class="form-check mt-3">
+        <input class="form-check-input" type="checkbox" id="acepta_terminos" name="acepta_terminos" required>
+        <label class="form-check-label" for="acepta_terminos">
+            He leído y acepto los términos del acuerdo.
+        </label>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAcuerdo" tabindex="-1" aria-labelledby="modalAcuerdoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalAcuerdoLabel">Acuerdo de Uso de Datos Personales</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" style="text-align: justify;">
+                <p><strong>ACUERDO DE USO DE DATOS PERSONALES</strong></p>
+
+                <p>
+                    Yo, Nombres Apellidos, con número de identificación número de identificación, declaro:
+                    Ser responsable de la veracidad de la información registrada en la plataforma informática.
+                    Ser responsable del uso exclusivo de las credenciales electrónicas de seguridad (usuario y contraseña)
+                    de mi cuenta en la plataforma informática y las actuaciones que realice en el sistema en uso de las mismas.
+                </p>
+
+                <p>
+                    Conocer y estar de acuerdo con el contenido y alcance de los términos que se me han expuesto.
+                    Para lo cual dejo constancia de mi aceptación. Autorizo libre y voluntariamente a la
+                    Secretaría de Educación Superior, Ciencia, Tecnología e Innovación para que realice el tratamiento de
+                    mis datos personales, teniendo como única finalidad el registro.
+                </p>
+
+                <p>
+                    La Secretaría de Educación Superior, Ciencia, Tecnología e Innovación (en adelante SENESCYT)
+                    pone en su conocimiento las condiciones de uso, fines y almacenamiento de los datos personales
+                    proporcionados por usted.
+                </p>
+
+                <p><strong>I.- Autorización para el almacenamiento y uso de información personal registrada en la plataforma informática.</strong></p>
+
+                <p>
+                    En cumplimiento de la Ley Orgánica de Protección de Datos Personales, en su artículo 12,
+                    respecto del derecho a la información de los titulares, se procede a informar lo siguiente:
+                </p>
+
+                <ul>
+                    <li><strong>Fines del tratamiento:</strong> Los datos personales proporcionados por cada usuario tendrán las siguientes finalidades: su uso será para el registro del perfil profesional. Su tratamiento será únicamente para cumplir el fin previamente descrito.</li>
+                    <li><strong>Base legal para el tratamiento:</strong> La Ley Orgánica de Protección de Datos Personales en su artículo 7 establece el tratamiento legítimo de datos personales. Art. 7.- Tratamiento legítimo de datos personales (sic).- El tratamiento será legítimo y lícito si se cumple con alguna de las siguientes condiciones:
+                        <ul>
+                            <li>2) Que sea realizado por el responsable del tratamiento en cumplimiento de una obligación legal.</li>
+                            <li>4) Que el tratamiento de datos personales se sustente en el cumplimiento de una misión realizada en interés público o en el ejercicio de poderes públicos conferidos al responsable (...)</li>
+                        </ul>
+                    </li>
+                    <li><strong>Tipos de tratamiento:</strong> Los datos proporcionados por los usuarios y aquellos obtenidos de las distintas bases de datos generadas por las entidades pertenecientes al Sistema Nacional de Registros Públicos se almacenarán en la plataforma informática de educación continua para el registro e inscripción.</li>
+                    <li>Los datos personales de los usuarios serán protegidos con todas las medidas de seguridad establecidas en la Ley Orgánica de Protección de Datos Personales y las disposiciones del Esquema Gubernamental de Seguridad de la Información.</li>
+                    <li>Los datos de los usuarios y los que se generen durante el registro e inscripción en la plataforma informática serán debidamente almacenados por la SENESCYT, garantizando la seguridad, integridad, disponibilidad y confidencialidad.</li>
+                    <li><strong>Identidad y datos de contacto del responsable del tratamiento de datos personales:</strong> El titular de los datos, de ser el caso, puede ejercer sus derechos de acceso, rectificación, cancelación, oposición y otros reconocidos en la Ley Orgánica de Protección de Datos Personales, en la dirección: Alpallana E7-183 entre Av. Diego de Almagro y Whymper. Código Postal: 170518 Quito - Ecuador, o en nuestros medios digitales.</li>
+                </ul>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
             {{-- Botón Final --}}
             <div class="text-center mt-4">
