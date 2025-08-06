@@ -209,7 +209,7 @@ class RegistrationController extends Controller
                 return response()->json([
                     'error'   => 'no_encontrado',
                     'message' => 'No se encontraron datos para esta cédula'
-                ], 200);
+                ], 422);
             }
 
             return response()->json([
@@ -222,7 +222,7 @@ class RegistrationController extends Controller
             return response()->json([
                 'error'   => 'sin_servicio',
                 'message' => 'No se pudo conectar al servicio Dinardap'
-            ], 200);
+            ], 422);
         }
     }
 

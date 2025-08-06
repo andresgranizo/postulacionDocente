@@ -32,7 +32,27 @@ $(document).ready(function () {
 
     $('#numero_identificacion, #fecha_nacimiento, #pais_nacionalidad').on('input change', consultarVisaSiAplica);
 
+
     $('#numero_identificacion').on('input', function () {
+        let modalCarga;
+
+        function mostrarSpinner() {
+            if (!modalCarga) {
+                const modalElement = document.getElementById('modalCargaDatos');
+                modalCarga = new bootstrap.Modal(modalElement, {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+            }
+            modalCarga.show();
+        }
+
+        function ocultarSpinner() {
+            if (modalCarga) {
+                modalCarga.hide();
+            }
+        }
+
         const tipo = $('#tipo_documento').val();
         const valor = $(this).val().trim();
 
@@ -43,11 +63,16 @@ $(document).ready(function () {
             $('#msj_cne').remove();
 
             $.ajax({
+                beforeSend: function () {
+
+                },
                 url: 'api/validar-cedula',
                 method: 'POST',
                 data: { cedula: valor },
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+
                 success: function (res) {
+                    mostrarSpinner();
                     toastr.success(res.message || "Cédula válida", '✅ Éxito');
                     $('#btn_guardar_formulario').prop('disabled', false);
                 },
@@ -62,7 +87,6 @@ $(document).ready(function () {
                 }
             });
 
-
             $.ajax({
                 url: window.registrationConsultarCedulaUrl,
                 method: 'POST',
@@ -73,7 +97,6 @@ $(document).ready(function () {
                         $('#msj_cedula').css('color', 'red').text('❌ ' + data.message);
                         return;
                     }
-
                     $('#apellidos_nombres').val(data.nombre).prop('readonly', true);
                     $('#campo_apellidos_nombres').removeClass('d-none');
 
@@ -83,15 +106,18 @@ $(document).ready(function () {
                         data: { cedula: valor },
                         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                         success(response) {
+                            ocultarSpinner();
                             console.log('RESPUESTA TITULOS:', response);
 
                             if (Array.isArray(response.titulos)) {
+
                                 const titulosReducidos = response.titulos.map(t => ({
                                     titulo: t.titulo,
                                     institucion: t.institucion
                                 }));
                                 mostrarTitulos(response.titulos);
                             } else {
+
                                 $('#input-titulos').val('');
                                 mostrarTitulos([]);
                             }
@@ -99,6 +125,7 @@ $(document).ready(function () {
 
                         error() {
                             toastr.error("❌ Error al consultar los títulos", "Error");
+
                             mostrarTitulos([]);
                         }
                     });
@@ -120,6 +147,7 @@ $(document).ready(function () {
                         $('#msj_cedula').removeClass('text-success').addClass('text-danger')
                             .html('❌ La persona es menor de edad.');
                         $('input, select, button').prop('disabled', true);
+
                         return;
                     }
 
@@ -134,7 +162,10 @@ $(document).ready(function () {
                                 ? '✅ Sin impedimento para ejercer cargo público'
                                 : '❌ La persona tiene impedimento para ejercer cargo público';
 
+
+
                             if (clase === 'text-danger') {
+
                                 $('input, select, button').prop('disabled', true);
                             }
 
@@ -143,18 +174,22 @@ $(document).ready(function () {
                                 .insertAfter('#msj_cedula');
                         },
                         error() {
+
                             $('<div id="msj_cne" class="form-text text-danger">❌ Error al consultar CNE</div>')
                                 .insertAfter('#msj_cedula');
+
                         }
                     });
                 },
                 error() {
+
                     $('#msj_cedula').css('color', 'red').text('❌ Error en la consulta');
                 }
             });
         }
 
         if (tipo === 'pasaporte' && valor.length > 3) {
+
             $.ajax({
                 url: 'api/validar-pasaporte',
                 method: 'POST',
@@ -168,11 +203,13 @@ $(document).ready(function () {
                         toastr.success(res.message, '✅ Válido');
                         $('#btn_guardar_formulario').prop('disabled', false);
                     }
+
                 },
                 error: function (xhr) {
                     const msg = xhr.responseJSON?.message || "Error al validar pasaporte.";
                     toastr.error(msg, "Error");
                     $('#btn_guardar_formulario').prop('disabled', true);
+
                 }
             });
         }
