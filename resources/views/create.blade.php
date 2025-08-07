@@ -156,26 +156,6 @@
                         </div>
                         <div class="modal-body" style="text-align: justify;">
                             <p><strong>ACUERDO DE USO DE DATOS PERSONALES</strong></p>
-
-                            <p>
-                                Yo, Nombres Apellidos, con número de identificación número de identificación, declaro:
-                                Ser responsable de la veracidad de la información registrada en la plataforma
-                                informática.
-                                Ser responsable del uso exclusivo de las credenciales electrónicas de seguridad (usuario
-                                y contraseña)
-                                de mi cuenta en la plataforma informática y las actuaciones que realice en el sistema en
-                                uso de las mismas.
-                            </p>
-
-                            <p>
-                                Conocer y estar de acuerdo con el contenido y alcance de los términos que se me han
-                                expuesto.
-                                Para lo cual dejo constancia de mi aceptación. Autorizo libre y voluntariamente a la
-                                Secretaría de Educación Superior, Ciencia, Tecnología e Innovación para que realice el
-                                tratamiento de
-                                mis datos personales, teniendo como única finalidad el registro.
-                            </p>
-
                             <p>
                                 La Secretaría de Educación Superior, Ciencia, Tecnología e Innovación (en adelante
                                 SENESCYT)
